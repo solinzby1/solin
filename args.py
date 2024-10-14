@@ -227,15 +227,15 @@ class PromptGenerationArgs:
 
 
 
-#@dc.dataclass
+@dc.dataclass
 class ServingBenchmarkArgs(Serializable):
     """Serving benchmark, consists of PromptGeneration, RequestSending, BenchmarkStatistics modules"""
 
     # ReuqestSending Module
-    rs_opts: RequestLineArgs = RequestLineArgs()
+    rs_opts: RequestLineArgs = field(default_factory=RequestLineArgs)
 
     # PromptGeneration Module
-    pmt_opts: PromptGenerationArgs = PromptGenerationArgs()
+    pmt_opts: PromptGenerationArgs =field(default_factory=PromptGenerationArgs)
 
     # display details to standard output
     verbose: bool = flag(False, action='store_true')
