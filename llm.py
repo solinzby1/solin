@@ -17,7 +17,7 @@ from vllm.sampling_params import SamplingParams
 from vllm.sequence import MultiModalData
 from vllm.usage.usage_lib import UsageContext
 from vllm.utils import Counter, deprecate_kwargs
-
+import torch
 logger = init_logger(__name__)
 
 
@@ -542,14 +542,21 @@ class LLM:
             pbar = tqdm(
                 total=num_requests,
                 desc="Processed prompts",
-                dynamic_ncols=True,
+                #dynamic_ncols=True,
                 postfix=f"Generation Speed: {0:.2f} toks/s",
             )
         # Run the engine.
         outputs: List[Union[RequestOutput, EmbeddingRequestOutput]] = []
         total_toks = 0
         while self.llm_engine.has_unfinished_requests():
-            step_outputs = self.llm_engine.step()
+            profile_dir = "vllm_benchmark_result/prefill"
+            with torch.profiler.profile(
+                activities=[
+                    torch.profiler.ProfilerActivity.CPU,
+                    torch.profiler.ProfilerActivity.CUDA,
+                ],
+                on_trace_ready=torch.profiler.tensorboard_trace_handler(profile_dir)) as p:
+                step_outputs = self.llm_engine.step()
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
@@ -561,6 +568,34 @@ class LLM:
                             spd = total_toks / pbar.format_dict["elapsed"]
                             pbar.postfix = f"Generation Speed: {spd:.2f} toks/s"
                         pbar.update(1)
+            with open(profile_dir + "/key_results.txt", "w") as f:
+                print(p.key_averages(), file=f)
+
+            profile_dir = "vllm_benchmark_result/decode"
+            with torch.profiler.profile(
+                activities=[
+                    torch.profiler.ProfilerActivity.CPU,
+                    torch.profiler.ProfilerActivity.CUDA,
+                ],
+                with_stack=True,
+                on_trace_ready=torch.profiler.tensorboard_trace_handler(
+                        profile_dir)) as p:
+                while self.llm_engine.has_unfinished_requests():
+                    step_outputs = self.llm_engine.step()
+                    for output in step_outputs:
+                        if output.finished:
+                            outputs.append(output)
+                            if use_tqdm:
+                                pbar.update(1)
+            with open(profile_dir + "/key_results.txt", "w") as f:
+                print(p.key_averages(group_by_stack_n=5).table(sort_by="self_cuda_time_total"), file=f)
+                p.export_stacks("/tmp/profiler_stacks.txt", "self_cuda_time_total")
+
+                '''
+                if not use_tqdm:
+                    trace_file = profile_dir + "/trace.json"
+                    p.export_chrome_trace(trace_file)
+                '''
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
