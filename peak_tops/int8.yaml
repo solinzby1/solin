@@ -1,0 +1,3 @@
+  - {function: matmul, transA: T, transB: N, a_type: i8_r, b_type: i8_r, c_type: i8_r, d_type: i8_r, compute_type: c_i32_r, M: 8192, N: 13312, K: 17792, initialization: trig_float, alpha: 1, beta: 0, iters: 100, cold_iters: 100, rotating: 512, scale_type: f32_r}
+
+

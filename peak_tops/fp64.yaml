@@ -1,0 +1,1 @@
+- {rocblas_function: rocblas_gemm_ex, transA: T, transB: N, a_type: f64_r, b_type: f64_r, c_type: f64_r, d_type: f64_r, compute_type: f64_r, M: 13312, N: 13312, K: 13312,  lda: 13312 , ldb: 13312 , ldc: 13312, alpha: 1, beta: 1, iters: 100, cold_iters: 100, solution_index: 621283406}

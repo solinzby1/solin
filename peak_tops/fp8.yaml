@@ -1,0 +1,1 @@
+- {rocblas_function: rocblas_gemm_ex3, transA: T, transB: N, a_type: f8_r, b_type: f8_r, c_type: f8_r, d_type: f8_r, composite_compute_type: f32, M: 9728, N: 8192, K: 65536, lda: 65664, ldb: 65664, ldc: 9856, ldd: 9856, alpha: 1, beta: 0, iters: 1000, cold_iters: 1000, initialization: trig_float, norm_check: 0}
